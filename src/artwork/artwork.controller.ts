@@ -12,6 +12,7 @@ import {
 import { ArtworkService } from './artwork.service';
 import { CreateArtworkDto } from './dto/create-artwork.dto';
 import { UpdateArtworkDto } from './dto/update-artwork.dto';
+import { MongoIdValidationPipe } from 'src/common/pipes/validator/mongoid.validator';
 
 @Controller('artwork')
 export class ArtworkController {
@@ -31,21 +32,18 @@ export class ArtworkController {
     return this.artworkService.findAll();
   }
 
-  @Get(':id')
+  @Get('/:id')
   findOne(
-    @Param(
-      'id',
-      new ParseIntPipe({
-        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
-      }),
+    @Param('id',
+   MongoIdValidationPipe,      
     )
     id: string,
   ) {
     return this.artworkService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() UpdateArtworkDto: UpdateArtworkDto) {
+  @Patch('/:id')
+  update(@Param('id', MongoIdValidationPipe) id: string, @Body() UpdateArtworkDto: UpdateArtworkDto) {
     try {
       return this.artworkService.update(id, UpdateArtworkDto);
     } catch (error) {
@@ -53,8 +51,8 @@ export class ArtworkController {
     }
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete('/:id')
+  remove(@Param('id', MongoIdValidationPipe) id: string) {
     try {
       return this.artworkService.remove(id);
     } catch (error) {

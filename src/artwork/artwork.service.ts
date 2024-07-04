@@ -1,69 +1,64 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Artwork } from './entity/artwork.entity';
-import { IdGeneratorService } from 'src/common/utils/id.generator.service';
 import { UpdateArtworkDto } from './dto/update-artwork.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Artwork, ArtworkDocument } from './schemas/artwork.schema';
+import { Model } from 'mongoose';
+import { CreateArtworkDto } from './dto/create-artwork.dto';
 
 @Injectable()
 export class ArtworkService {
-  constructor(private readonly idGeneratorService: IdGeneratorService) {}
-  private artwork: Artwork[] = [];
+  constructor(
+    @InjectModel(Artwork.name)
+    private readonly artworkModel: Model<ArtworkDocument>    
+  ) {}
 
-  create(createArtworkDTO: any) {
-    const id = this.idGeneratorService.getNextId();
-    const artworkEntity = {
-      id: id,
-      art: createArtworkDTO.art,
-      artist: createArtworkDTO.artist,
-      releasedDate: new Date(Date.now()),
-      price: createArtworkDTO.price,
-    };
-    return this.artwork.push(artworkEntity);
-  }
-
-  findAll() {
-    return this.artwork;
-  }
-
-  findOne(id: string) {
-    const artwork = this.artwork.find((artwork) => artwork.id === +id);
-    if (!artwork) {
-      //   throw new HttpException(`artwork #${id} not found`, HttpStatus.NOT_FOUND);
-      throw new NotFoundException(`artwork #${id} not found`);
-    }
-    return artwork;
-  }
-
-  update(id: string, updateArtworkDto: UpdateArtworkDto) {
+  async create(createArtworkDTO: CreateArtworkDto): Promise<Artwork> {
     try {
-      this.artwork = this.artwork.map((artwork) => {
-        if (artwork.id === +id) {
-          const updatedArtwork = {
-            ...artwork,
-            ...updateArtworkDto,
-          };
-          return updatedArtwork;
-        } else {
-          throw new NotFoundException(`artwork #${id} not found`);
-        }
-      });
-      return 'Updated successfully';
+      return await this.artworkModel.create(createArtworkDTO);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  async findAll(): Promise<Artwork[]> {
+    return await this.artworkModel.find();
+  }
+
+  async findOne(id: string): Promise<Artwork> {
+    return await this.artworkModel.findById(id);
+  }
+
+  async update(
+    id: string,
+    updateArtworkDto: UpdateArtworkDto,
+  ): Promise<Artwork> {
+    try {
+      const updateUser = await this.artworkModel.findOneAndUpdate(
+        {
+          _id: id,
+        },
+        updateArtworkDto,
+        {
+          new: true,
+        },
+      );
+
+      if (!updateUser) {
+        throw new NotFoundException(`User dengan ID ${id} tidak di temukan`);
+      }
+
+      return updateUser;
     } catch (error) {
       throw new ForbiddenException('Gagal update artwork');
     }
   }
 
-  remove(id: string) {
-    const artworkIndex = this.artwork.findIndex((item) => item.id === +id);
-
-    if (artworkIndex >= 0) {
-      this.artwork.splice(artworkIndex, 1);
-      return 'Deleted successfully';
-    } else {
-      throw new NotFoundException(`artwork #${id} not found`);
-    }
+  async remove(id: string) {
+    return this.artworkModel.deleteOne({ _id: id });
   }
 }

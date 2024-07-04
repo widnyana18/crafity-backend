@@ -1,10 +1,19 @@
 import { Module } from '@nestjs/common';
 import { ArtworkController } from './artwork.controller';
 import { ArtworkService } from './artwork.service';
-import { IdGeneratorService } from 'src/common/utils/id.generator.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Artwork, ArtworkSchema } from './schemas/artwork.schema';
 
 @Module({
+  imports: [
+    MongooseModule.forFeature([
+      {
+        name: Artwork.name,
+        schema: ArtworkSchema,
+      },
+    ]),
+  ],
   controllers: [ArtworkController],
-  providers: [ArtworkService, IdGeneratorService],
+  providers: [ArtworkService],
 })
 export class ArtworkModule {}
