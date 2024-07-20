@@ -10,9 +10,13 @@ import { DatabaseModule } from './database/database.module';
 import configs from './common/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseService } from './database/database.service';
+import { AuthModule } from './authentication/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
+    AuthModule,
+    UsersModule,    
     ArtworkModule,
     ConfigModule.forRoot({
       load: configs,
