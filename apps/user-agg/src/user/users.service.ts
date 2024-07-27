@@ -1,81 +1,35 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { CreateUserDTO } from './dto/create-user.dto';
-import * as bcrypt from 'bcryptjs';
-import { User, UserDocument } from './schemas/user.schema';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import { LoginDTO } from 'src/authentication/dto/login.dto';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { ARTWORK_QUEUE } from '@app/shared';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User.name)
-    private userModel: Model<UserDocument>, // 1.
+    @Inject(ARTWORK_QUEUE) private readonly userClientService: ClientProxy, // 1.
   ) {}
 
-  async create(createUserDTO: CreateUserDTO): Promise<User> {
-    const salt = await bcrypt.genSalt(); // 2.
-    const hashedPassword = await bcrypt.hash(createUserDTO.password, salt); // 3.
-    const createdUser = new this.userModel({
-      ...createUserDTO,
-      password: hashedPassword,
-    });
-
-    try {
-      const savedUser = await createdUser.save();
-      delete savedUser.password;
-      console.log('FINAL SIGNUP DATA :' + savedUser);
-      return savedUser;
-    } catch (error) {
-      throw new Error(error);
-    }
+  async findById(id: string): Promise<any> {
+    return await firstValueFrom(
+      this.userClientService.send('find-user', { _id: id }),
+    ); // 1
   }
 
-  async findOne(data: LoginDTO): Promise<User> {
+  async update(userId: string, updateUserDto: UpdateUserDto): Promise<any> {
     try {
-      const user = await this.userModel.findOne({ email: data.email });
-      if (!user) {
-        throw new UnauthorizedException('Could not find user');
-      }
-      return user;
-    } catch (error) {
-      throw new Error(error);
-    }
-  }
-
-  async findById(id: string): Promise<User> {
-    return this.userModel.findById({ id: id });
-  }
-
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    try {
-      const updateUser = await this.userModel.findOneAndUpdate(
-        {
-          _id: id,
-        },
-        updateUserDto,
-        {
-          new: true,
-        },
-      );
-
-      if (!updateUser) {
-        throw new NotFoundException(`User dengan ID ${id} tidak di temukan`);
-      }
-
-      return updateUser;
+      return await firstValueFrom(
+        this.userClientService.send('update-user', {
+          userId,
+          data: updateUserDto,
+        }),
+      ); // 1
     } catch (error) {
       throw new ForbiddenException('Gagal update artwork');
     }
   }
 
   async remove(id: string) {
-    return this.userModel.deleteOne({ _id: id });
+    return await firstValueFrom(this.userClientService.send('delete-user', id)); // 1
   }
 }

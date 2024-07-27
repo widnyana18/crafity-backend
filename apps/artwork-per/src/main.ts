@@ -1,15 +1,7 @@
-import { NestFactory } from '@nestjs/core';
-import { ArtworkModule } from './artwork.module';
-import { ARTWORK_QUEUE, RmqService, USER_QUEUE } from '@app/shared';
-import { RmqOptions } from '@nestjs/microservices';
+import { AppModule } from './app.module';
+import { AppParser } from '@app/shared/parser/app.parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(ArtworkModule);
-  const rmqService = app.get<RmqService>(RmqService);
-
-  app.connectMicroservice<RmqOptions>(
-    rmqService.getOptions(ARTWORK_QUEUE, true),
-  );
-  await app.startAllMicroservices();
+  await AppParser.persistence(AppModule);
 }
 bootstrap();

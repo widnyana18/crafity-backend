@@ -1,8 +1,23 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/crafity-api/src",
   "monorepo": true,
+  "root": "apps/crafity-api",
+  "compilerOptions": {
+    "webpack": true,
+    "tsConfigPath": "apps/crafity-api/tsconfig.app.json"
+  },
   "projects": {
+    "api": {
+      "type": "application",
+      "root": "apps/crafity-api",
+      "entryFile": "main",
+      "sourceRoot": "apps/crafity-api/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/crafity-api/tsconfig.app.json"
+      }
+    },
     "artwork-agg": {
       "type": "application",
       "root": "apps/artwork-agg",

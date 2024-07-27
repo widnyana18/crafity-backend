@@ -1,31 +1,61 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { CreateUserDTO } from 'src/users/dto/create-user.dto';
-import { UsersService } from 'src/users/users.service';
+import {
+  Body,
+  Controller,
+  HttpStatus,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
-import { User } from 'src/users/schemas/user.schema';
+import { MessagePattern, RpcException } from '@nestjs/microservices';
+import { SignUpDto } from './dto/sign-up.dto';
+import { response } from 'express';
+import { TokenExpiredError } from '@nestjs/jwt';
 
-@Controller('auth')
+@Controller('authentication')
 export class AuthController {
-  constructor(
-    private userService: UsersService,
-    private authService: AuthService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
   @Post('signup')
-  signup(
+  async signup(
     @Body()
-    userDTO: CreateUserDTO,
-  ): Promise<User> {
-    return this.userService.create(userDTO);
+    signUpDto: SignUpDto,
+  ) {
+    const createdUser = await this.authService.signup(signUpDto);
+    response.status(HttpStatus.CREATED).json({
+      message: 'Selamat Anda Berhasil Membuat Akun',
+      user: createdUser,
+      StatusCode: HttpStatus.CREATED,
+    });
   }
 
   @Post('login')
-  login(
+  async login(
     @Body()
     loginDTO: LoginDTO,
   ) {
-    console.log( 'DATA LOGINNN NIII :' + loginDTO);
-    return this.authService.login(loginDTO);
+    const result = await this.authService.login(loginDTO);
+    
+    response.status(HttpStatus.ACCEPTED).json({
+      message: 'Selamat Anda Berhasil Login',
+      token: result,
+      StatusCode: HttpStatus.ACCEPTED,
+    });
+  }
+
+  @MessagePattern('verify-token')
+  async validateUser(jwtToken: string) {
+    try {
+      return await this.authService.verifyToken(jwtToken);
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        throw new RpcException(
+          new UnauthorizedException('Silahkan Login Kembali').getResponse(),
+        );
+      }
+      throw new RpcException(
+        new UnauthorizedException('Silahkan Login Kembali').getResponse(),
+      );
+    }
   }
 }

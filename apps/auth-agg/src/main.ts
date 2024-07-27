@@ -1,8 +1,7 @@
-import { NestFactory } from '@nestjs/core';
-import { Authentication/authAggModule } from './auth.module';
+import { AppParser } from "@app/shared";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
-  const app = await NestFactory.create(Authentication/authAggModule);
-  await app.listen(3000);
+  await AppParser.aggregation(AppModule);
 }
 bootstrap();

@@ -1,17 +1,16 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 
 import { UsersService } from './users.service';
-import { User, UserSchema } from './schemas/user.schema';
+import { ARTWORK_QUEUE, AUTH_QUEUE, RmqModule } from '@app/shared';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      {
-        name: User.name,
-        schema: UserSchema,
-      },
-    ]),
+    RmqModule.register({
+      name: ARTWORK_QUEUE,
+    }),
+    RmqModule.register({
+      name: AUTH_QUEUE,
+    }), 
   ],
   providers: [UsersService],
   exports: [UsersService],

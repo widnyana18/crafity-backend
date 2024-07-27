@@ -1,38 +1,28 @@
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
-import { MongoIdValidationPipe } from 'src/common/pipes/validator/mongoid.validator';
+import { Controller } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
-  @Get('/:id')
-  findById(
-    @Param('id', MongoIdValidationPipe)
-    id: string,
-  ) {
-    return this.usersService.findById(id);
+  @MessagePattern('create-user')
+  async create(@Payload() payload: any): Promise<any> {
+    return this.usersService.create(payload);
   }
 
-  @Patch('/:id')
-  update(
-    @Param('id', MongoIdValidationPipe) id: string,
-    @Body() UpdateUserDto: UpdateUserDto,
-  ) {
-    try {
-      return this.usersService.update(id, UpdateUserDto);
-    } catch (error) {
-      throw error.message;
-    }
+  @MessagePattern('find-user')
+  async getOne(@Payload() payload: string): Promise<any> {
+    return this.usersService.findOne(payload);
   }
 
-  @Delete('/:id')
-  remove(@Param('id', MongoIdValidationPipe) id: string) {
-    try {
-      return this.usersService.remove(id);
-    } catch (error) {
-      throw error.message;
-    }
+  @MessagePattern('update-user')
+  async update(@Payload() payload: any) {
+    return this.usersService.update(payload);
+
+  }
+  @MessagePattern('delete-user')
+  async delete(@Payload() applicationId: string) {
+    return this.usersService.remove(applicationId);
   }
 }

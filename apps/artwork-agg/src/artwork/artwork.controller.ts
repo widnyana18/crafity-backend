@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -12,54 +13,59 @@ import {
 import { ArtworkService } from './artwork.service';
 import { CreateArtworkDto } from './dto/create-artwork.dto';
 import { UpdateArtworkDto } from './dto/update-artwork.dto';
-import { AccessTokenGuard } from '../guard/access-token.guard';
+import { AccessTokenGuard } from '../../../../libs/shared/src/guard/access-token.guard';
 import { MongoIdValidationPipe } from '@app/shared';
+import { response } from 'express';
 
 @UseGuards(AccessTokenGuard)
-@Controller('artwork-agg')
+@Controller('artwork')
 export class ArtworkController {
   constructor(private artworkService: ArtworkService) {}
 
   @Post()
-  create(@Body() createArtworkDTO: CreateArtworkDto) {
-    try {
-      return this.artworkService.create(createArtworkDTO);
-    } catch (e) {
-      throw e.message;
-    }
+  async create(@Body() createArtworkDTO: CreateArtworkDto) {
+    const artwork = await this.artworkService.create(createArtworkDTO);
+
+    response.status(HttpStatus.CREATED).json({
+      message: 'Anda berhasil menambahkan data artwork',
+      data: artwork,
+      StatusCode: HttpStatus.CREATED,
+    });
   }
 
   @Get()
-  findAll(@Query() query: any) {
-    return this.artworkService.findAll(query);
+  async findAll(@Query() query: any) {
+    return await this.artworkService.findAll(query);
   }
 
   @Get('/:id')
-  findOne(
+  async findOne(
     @Param('id', MongoIdValidationPipe)
     id: string,
   ) {
-    return this.artworkService.findOne(id);
+    return await this.artworkService.findOne(id);
   }
 
   @Patch('/:id')
-  update(
+  async update(
     @Param('id', MongoIdValidationPipe) id: string,
     @Body() UpdateArtworkDto: UpdateArtworkDto,
   ) {
-    try {
-      return this.artworkService.update(id, UpdateArtworkDto);
-    } catch (error) {
-      throw error.message;
-    }
+    const updatedArtwork = await this.artworkService.update(id, UpdateArtworkDto);
+
+    response.status(HttpStatus.ACCEPTED).json({
+      message: 'Data berhasil di update',
+      data: updatedArtwork,
+      StatusCode: HttpStatus.ACCEPTED,
+    });
   }
 
   @Delete('/:id')
-  remove(@Param('id', MongoIdValidationPipe) id: string) {
-    try {
-      return this.artworkService.remove(id);
-    } catch (error) {
-      throw error.message;
-    }
+  async remove(@Param('id', MongoIdValidationPipe) id: string) {
+    await this.artworkService.remove(id);
+    response.status(HttpStatus.ACCEPTED).json({
+      message: 'Data Anda berhasil di hapus',      
+      StatusCode: HttpStatus.ACCEPTED,
+    });
   }
 }

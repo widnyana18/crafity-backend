@@ -1,16 +1,15 @@
 import {
   ForbiddenException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateUserDTO } from './dto/create-user.dto';
 import * as bcrypt from 'bcryptjs';
 import { User, UserDocument } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { LoginDTO } from 'src/authentication/dto/login.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class UsersService {
@@ -19,59 +18,61 @@ export class UsersService {
     private userModel: Model<UserDocument>, // 1.
   ) {}
 
-  async create(createUserDTO: CreateUserDTO): Promise<User> {
+  async create(payload: any): Promise<User> {
     const salt = await bcrypt.genSalt(); // 2.
-    const hashedPassword = await bcrypt.hash(createUserDTO.password, salt); // 3.
+    const hashedPassword = await bcrypt.hash(payload.password, salt); // 3.
     const createdUser = new this.userModel({
-      ...createUserDTO,
+      ...payload,
       password: hashedPassword,
     });
 
     try {
       const savedUser = await createdUser.save();
       delete savedUser.password;
-      console.log('FINAL SIGNUP DATA :' + savedUser);
       return savedUser;
     } catch (error) {
-      throw new Error(error);
+      const duplicateKey = error.keyValue ? Object.keys(error.keyValue)[0] : '';
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `${duplicateKey} sudah digunakan`,
+      });
     }
   }
 
-  async findOne(data: LoginDTO): Promise<User> {
-    try {
-      const user = await this.userModel.findOne({ email: data.email });
-      if (!user) {
-        throw new UnauthorizedException('Could not find user');
-      }
-      return user;
-    } catch (error) {
-      throw new Error(error);
+  async findOne(payload: any): Promise<User> {
+    const user = await this.userModel.findOne(payload);
+    if (!user) {
+      throw new UnauthorizedException('Could not find user');
     }
+    return user;
   }
 
-  async findById(id: string): Promise<User> {
-    return this.userModel.findById({ id: id });
-  }
-
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(payload: any): Promise<User> {
     try {
       const updateUser = await this.userModel.findOneAndUpdate(
         {
-          _id: id,
+          _id: payload.userId,
         },
-        updateUserDto,
+        payload.data,
         {
           new: true,
         },
       );
 
       if (!updateUser) {
-        throw new NotFoundException(`User dengan ID ${id} tidak di temukan`);
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `user dengan ID ${payload.userId} tidak di temukan`,
+        });
       }
 
       return updateUser;
     } catch (error) {
-      throw new ForbiddenException('Gagal update artwork');
+      const duplicateKey = error.keyValue ? Object.keys(error.keyValue)[0] : '';
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `${duplicateKey} sudah digunakan`,
+      });
     }
   }
 

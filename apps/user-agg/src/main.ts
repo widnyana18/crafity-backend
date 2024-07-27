@@ -1,8 +1,7 @@
-import { NestFactory } from '@nestjs/core';
-import { UserAggModule } from './user.module';
+import { AppModule } from './app.module';
+import { AppParser } from '@app/shared';
 
 async function bootstrap() {
-  const app = await NestFactory.create(UserAggModule);
-  await app.listen(3000);
+  await AppParser.aggregation(AppModule);
 }
 bootstrap();
