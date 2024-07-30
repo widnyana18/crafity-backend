@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import config from './config';
+import config from './common/config';
 import { UsersModule } from './user/users.module';
 import { RmqModule } from '@app/shared';
 

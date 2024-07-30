@@ -20,3 +20,8 @@ export * from './queue/rabbitmq/rmq.service';
 
 // parser
 export * from './parser/app.parser';
+
+// swagger
+export * from './swagger/api-response/response.error';
+export * from './swagger/api-response/response.success';
+export * from './swagger/document/login.document';

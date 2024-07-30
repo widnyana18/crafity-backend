@@ -1,4 +1,15 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateUserDTO } from '../../../../auth-agg/src/authentication/dto/create-user.dto';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class UpdateUserDto extends PartialType(CreateUserDTO) {}
+export class UpdateUserDto {
+  @IsString()
+  @IsNotEmpty()
+  readonly art: string;
+
+  @IsNotEmpty()
+  @IsString()
+  readonly artist: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  readonly price: number;
+}

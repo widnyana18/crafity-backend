@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RmqModule } from 'libs/shared/src/queue/rabbitmq/rmq.module';
 import { ConfigModule } from '@nestjs/config';
-import configs from './config/index';
+import configs from './common/config/index';
 import { ArtworkModule } from './artwork/artwork.module';
 
 @Module({

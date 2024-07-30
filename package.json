@@ -1,6 +1,6 @@
 {
   "name": "crafity-api",
-  "version": "1.4.0",
+  "version": "1.8.0",
   "description": "Build simple project backend about commision work for art marketplace using nest js and mongodb",
   "author": "I Komang Widnyana",
   "private": true,
